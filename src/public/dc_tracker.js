@@ -75,24 +75,24 @@
 
   const config = { attributes: true, childList: true, characterData: true };
   observer.observe(document.querySelector('#app-content-region'), config);
-
-  // In game tracking
-  const trackInGame = () => {
-    console.log("In tracking.");
-    const myId = GamesManager.getInstance().playerGames.models[0].attributes.user_id;
-    const currentTurns = _.foldl(SDK.GameSession.instance.turns, (acc, turn) => {
-      if (turn.playerId == myId) {
-        const cardsInTurn = turn.steps
-                              .filter(step => step.action.type == "PlayCardFromHandAction")
-                              .map(step => SDK.CardFactory.cardForIdentifier(step.action.cardDataOrIndex.id).name);
-        acc.push.apply(acc, cardsInTurn);
-      }
-      return acc;
-    }, []);
-
-    console.log(currentTurns);
-  }
-
-  // Adds tracking callback to the game eventbus.
-  SDK.NetworkManager.getInstance().getEventBus()._events.network_game_event.push({ callback: () => { trackInGame(); }})
 })();
+
+// In game tracking
+const trackInGame = { call: () => {
+  console.log("In tracking.");
+  const myId = GamesManager.getInstance().playerGames.models[0].attributes.user_id;
+  const currentTurns = _.foldl(SDK.GameSession.instance.turns, (acc, turn) => {
+    if (turn.playerId == myId) {
+      const cardsInTurn = turn.steps
+                            .filter(step => step.action.type == "PlayCardFromHandAction")
+                            .map(step => SDK.CardFactory.cardForIdentifier(step.action.cardDataOrIndex.id).name);
+      acc.push.apply(acc, cardsInTurn);
+    }
+    return acc;
+  }, []);
+
+  console.log(currentTurns);
+}}
+
+// Adds tracking callback to the game eventbus.
+SDK.NetworkManager.getInstance().getEventBus().on("network_game_event", trackInGame)
